@@ -3,6 +3,8 @@ name: Deploy Reglas
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'rules/**'
 
 jobs:
   deploy:
@@ -11,6 +13,14 @@ jobs:
     steps:
       - name: Checkout código
         uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Validar reglas
+        run: node scripts/validate.js rules/REVIEW_RULES.md
       
       - name: Backup archivo actual
         run: |
@@ -30,6 +40,19 @@ jobs:
       
       - name: Notificar en Telegram
         run: |
-          echo "✅ Deploy completado!"
-          echo "Commit: ${{ github.sha }}"
-          echo "Autor: ${{ github.actor }}"
+          COMMIT_SHORT="${{ github.sha }}"
+          COMMIT_SHORT="${COMMIT_SHORT:0:7}"
+          
+          openclaw message send \
+            --channel=telegram \
+            --target=6186805225 \
+            --message="✅ Reglas de revisión actualizadas
+
+📋 Commit: ${COMMIT_SHORT}
+👤 Autor: ${{ github.actor }}
+📝 ${{ github.event.head_commit.message }}
+
+🔄 Code Review Agent reiniciado con nuevas reglas.
+
+🔗 https://github.com/${{ github.repository }}/commit/${{ github.sha }}" \
+          || echo "⚠️  Notificación falló"
