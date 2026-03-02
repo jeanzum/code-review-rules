@@ -310,3 +310,5 @@ Este cambio prueba el sistema de CI/CD automático:
 - ✅ GitHub Actions valida el formato
 - ✅ Deploy automático al servidor
 - ✅ Notificación en Telegram
+
+<!-- Test deploy: 2026-03-02-15:20:34 -->
