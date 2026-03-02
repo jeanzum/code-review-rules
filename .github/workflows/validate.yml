@@ -1,0 +1,54 @@
+name: Validar Reglas
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'rules/**'
+      - 'scripts/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Validar formato de reglas
+        run: node scripts/validate.js rules/REVIEW_RULES.md
+      
+      - name: Contar reglas
+        run: |
+          RULE_COUNT=$(grep -c "^###" rules/REVIEW_RULES.md || echo "0")
+          echo "📊 Total reglas: $RULE_COUNT"
+          if [ "$RULE_COUNT" -lt 25 ]; then
+            echo "❌ Se requieren mínimo 25 reglas"
+            exit 1
+          fi
+          echo "✅ Validación OK: $RULE_COUNT reglas"
+      
+      - name: Verificar bloques de código
+        run: |
+          CODE_BLOCKS=$(grep -c '```' rules/REVIEW_RULES.md || echo "0")
+          echo "📊 Bloques de código: $CODE_BLOCKS"
+          if [ "$CODE_BLOCKS" -lt 20 ]; then
+            echo "⚠️  Recomendado tener más ejemplos de código"
+          fi
+      
+      - name: Comentar en PR
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ **Validación completada**\n\nLas reglas están listas para merge. El despliegue se ejecutará automáticamente después del merge.'
+            })

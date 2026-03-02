@@ -1,0 +1,30 @@
+{
+  "name": "code-review-rules",
+  "version": "1.0.0",
+  "description": "Reglas de revisión de código para Q10 Jack - Code Review Agent",
+  "main": "scripts/validate.js",
+  "scripts": {
+    "validate": "node scripts/validate.js rules/REVIEW_RULES.md",
+    "stats": "echo 'Reglas:' && grep -c '^###' rules/REVIEW_RULES.md && echo 'Ejemplos de código:' && grep -c '```' rules/REVIEW_RULES.md",
+    "check": "npm run validate && npm run stats"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YOUR_ORG/code-review-rules.git"
+  },
+  "keywords": [
+    "code-review",
+    "linting",
+    "quality",
+    "q10",
+    "jack",
+    "csharp",
+    "javascript"
+  ],
+  "author": "Q10 Team",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/YOUR_ORG/code-review-rules/issues"
+  },
+  "homepage": "https://github.com/YOUR_ORG/code-review-rules#readme"
+}

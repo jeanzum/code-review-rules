@@ -1,0 +1,40 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+logs/
+
+# Temp
+tmp/
+temp/
+*.tmp
+
+# SSH keys (por si alguien los pone por error)
+*.pem
+*.key
+id_rsa*
+
+# Backups locales
+*.backup
+*.bak
+
+# OS
+Thumbs.db
+.DS_Store
