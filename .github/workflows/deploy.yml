@@ -3,8 +3,9 @@ name: Deploy Reglas
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'rules/**'
+    # Trigger en cualquier cambio (sin path filter por ahora)
+    #paths:
+    #  - 'rules/**'
 
 jobs:
   deploy:
