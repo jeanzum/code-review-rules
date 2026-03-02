@@ -3,25 +3,14 @@ name: Deploy Reglas
 on:
   push:
     branches: [ main ]
-    # Trigger en cualquier cambio (sin path filter por ahora)
-    #paths:
-    #  - 'rules/**'
 
 jobs:
   deploy:
-    runs-on: self-hosted  # ← Self-hosted runner en el servidor
+    runs-on: self-hosted
     
     steps:
       - name: Checkout código
         uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      
-      - name: Validar (doble check)
-        run: node scripts/validate.js rules/REVIEW_RULES.md
       
       - name: Backup archivo actual
         run: |
@@ -33,36 +22,14 @@ jobs:
         run: |
           cp rules/REVIEW_RULES.md \
              /data/workspace/code-review-agent/knowledge/REVIEW_RULES.md
-          
           echo "✅ Archivo desplegado exitosamente"
       
       - name: Reiniciar Code Review Agent
         run: |
-          sudo /data/workspace/heartbeat-control.sh restart \
-          || echo "⚠️  Reinicio manual puede ser necesario"
+          sudo /data/workspace/heartbeat-control.sh restart || echo "⚠️  Reinicio manual necesario"
       
       - name: Notificar en Telegram
         run: |
-          COMMIT_SHORT="${{ github.sha }}"
-          COMMIT_SHORT="${COMMIT_SHORT:0:7}"
-          
-          openclaw message send \
-            --channel=telegram \
-            --target=6186805225 \
-            --message="✅ Reglas de revisión actualizadas
-            
-📋 Commit: ${COMMIT_SHORT}
-👤 Autor: ${{ github.actor }}
-📝 ${{ github.event.head_commit.message }}
-
-🔄 Code Review Agent reiniciado con nuevas reglas.
-
-🔗 https://github.com/${{ github.repository }}/commit/${{ github.sha }}" \
-          || echo "⚠️  Notificación falló"
-      
-      - name: Crear Release Tag
-        if: github.event.head_commit.message contains '[release]'
-        run: |
-          VERSION="v$(date +%Y.%m.%d-%H%M)"
-          git tag "$VERSION"
-          git push origin "$VERSION"
+          echo "✅ Deploy completado!"
+          echo "Commit: ${{ github.sha }}"
+          echo "Autor: ${{ github.actor }}"
