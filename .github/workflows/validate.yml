@@ -9,7 +9,7 @@ on:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # ← Self-hosted runner en el servidor
     
     steps:
       - name: Checkout código

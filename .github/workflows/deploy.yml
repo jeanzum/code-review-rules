@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # ← Self-hosted runner en el servidor
     
     steps:
       - name: Checkout código
@@ -22,71 +22,42 @@ jobs:
       - name: Validar (doble check)
         run: node scripts/validate.js rules/REVIEW_RULES.md
       
-      - name: Configurar SSH
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SERVER_HOST" >> ~/.ssh/known_hosts 2>/dev/null || echo "Warning: Could not add host key"
-      
       - name: Backup archivo actual
-        env:
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            ${SERVER_USER}@${SERVER_HOST} \
-            "cp /data/workspace/code-review-agent/knowledge/REVIEW_RULES.md \
-                /data/workspace/code-review-agent/knowledge/REVIEW_RULES.md.backup.\$(date +%Y%m%d-%H%M%S)" \
-            || echo "⚠️  Backup falló (puede ser primera ejecución)"
+          cp /data/workspace/code-review-agent/knowledge/REVIEW_RULES.md \
+             /data/workspace/code-review-agent/knowledge/REVIEW_RULES.md.backup.$(date +%Y%m%d-%H%M%S) \
+          || echo "⚠️  Backup falló (puede ser primera ejecución)"
       
       - name: Deploy nuevo archivo
-        env:
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
         run: |
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            rules/REVIEW_RULES.md \
-            ${SERVER_USER}@${SERVER_HOST}:/data/workspace/code-review-agent/knowledge/REVIEW_RULES.md
+          cp rules/REVIEW_RULES.md \
+             /data/workspace/code-review-agent/knowledge/REVIEW_RULES.md
           
           echo "✅ Archivo desplegado exitosamente"
       
       - name: Reiniciar Code Review Agent
-        env:
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            ${SERVER_USER}@${SERVER_HOST} \
-            "/data/workspace/heartbeat-control.sh restart" \
-            || echo "⚠️  Reinicio manual puede ser necesario"
+          sudo /data/workspace/heartbeat-control.sh restart \
+          || echo "⚠️  Reinicio manual puede ser necesario"
       
       - name: Notificar en Telegram
-        env:
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
         run: |
           COMMIT_SHORT="${{ github.sha }}"
           COMMIT_SHORT="${COMMIT_SHORT:0:7}"
           
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
-            ${SERVER_USER}@${SERVER_HOST} \
-            "openclaw message send \
-              --channel=telegram \
-              --target=6186805225 \
-              --message='✅ Reglas de revisión actualizadas
-              
+          openclaw message send \
+            --channel=telegram \
+            --target=6186805225 \
+            --message="✅ Reglas de revisión actualizadas
+            
 📋 Commit: ${COMMIT_SHORT}
 👤 Autor: ${{ github.actor }}
 📝 ${{ github.event.head_commit.message }}
 
-🔄 Code Review Agent reiniciado.
+🔄 Code Review Agent reiniciado con nuevas reglas.
 
-🔗 https://github.com/${{ github.repository }}/commit/${{ github.sha }}'" \
-            || echo "⚠️  Notificación falló"
+🔗 https://github.com/${{ github.repository }}/commit/${{ github.sha }}" \
+          || echo "⚠️  Notificación falló"
       
       - name: Crear Release Tag
         if: github.event.head_commit.message contains '[release]'
