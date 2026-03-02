@@ -303,3 +303,10 @@ Ver [CHANGELOG.md](CHANGELOG.md) para el historial completo de cambios en las re
 ---
 
 **🤖 Este sistema permite que el equipo mejore continuamente las prácticas de código de Q10.**
+
+## 🧪 Test CI/CD - 2026-03-02 15:12 UTC
+
+Este cambio prueba el sistema de CI/CD automático:
+- ✅ GitHub Actions valida el formato
+- ✅ Deploy automático al servidor
+- ✅ Notificación en Telegram
